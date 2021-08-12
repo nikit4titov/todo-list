@@ -1,7 +1,7 @@
 <template>
   <form @submit.prevent="addTodo">
-    <input v-model.trim="titleOfNewTodo" placeholder="Enter your todo" />
-    <button>Add todo</button>
+    <input v-model.trim="newTodoTitle" placeholder="Enter your todo" />
+    <button :disabled="newTodoTitle === ''">Add todo</button>
   </form>
   <button v-if="todos.length >= 2" @click="deleteTodos" class="delete-todos">
     Delete todos
@@ -20,7 +20,7 @@
       >
         {{ todo.title }}
       </span>
-      <input v-else v-model.trim="todo.title" />
+      <input v-else v-model.trim="todo.title" class="edit-todo-input" />
       <button @click="toggleEditing(todo.id)">
         {{ todo.editing ? "Save" : "Edit" }}
       </button>
@@ -40,26 +40,36 @@ interface Todo {
   editing: boolean;
 }
 
+const TODOS_STORAGE_KEY = "todos";
+
 export default defineComponent({
   name: "App",
   data() {
     return {
-      titleOfNewTodo: "",
+      newTodoTitle: "",
       todos: [] as Todo[],
     };
   },
+  beforeMount(): void {
+    this.loadTodos();
+  },
+  watch: {
+    todos: {
+      handler(todos: Todo[]): void {
+        this.saveTodos(todos);
+      },
+      deep: true,
+    },
+  },
   methods: {
     addTodo(): void {
-      if (this.titleOfNewTodo === "") {
-        return;
-      }
       this.todos.push({
         id: Date.now(),
-        title: this.titleOfNewTodo,
+        title: this.newTodoTitle,
         completed: false,
         editing: false,
       });
-      this.titleOfNewTodo = "";
+      this.newTodoTitle = "";
     },
     deleteTodo(id: number): void {
       const index = this.todos.findIndex((t) => t.id === id);
@@ -82,6 +92,17 @@ export default defineComponent({
         todo.completed = !todo.completed;
       }
     },
+    saveTodos(todos: Todo[]): void {
+      localStorage.setItem(TODOS_STORAGE_KEY, JSON.stringify(todos));
+    },
+    loadTodos(): void {
+      const todos = localStorage.getItem(TODOS_STORAGE_KEY);
+      if (todos === null) {
+        this.todos = [];
+      } else {
+        this.todos = JSON.parse(todos);
+      }
+    },
   },
 });
 </script>
@@ -91,20 +112,27 @@ export default defineComponent({
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   margin-top: 60px;
+  text-align: center;
   .delete-todos {
     width: 246px;
   }
   .todos {
     margin-top: 10px;
     .todo {
-      margin-bottom: 1px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
       &.completed .title {
         text-decoration: line-through;
       }
+      .title,
+      .edit-todo-input {
+        flex-basis: 50%;
+        text-align: right;
+      }
       .title {
-        margin-right: 5px;
+        margin-right: 10px;
       }
     }
   }
