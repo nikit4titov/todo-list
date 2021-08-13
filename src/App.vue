@@ -20,7 +20,12 @@
       >
         {{ todo.title }}
       </span>
-      <input v-else v-model.trim="todo.title" class="edit-todo-input" />
+      <input
+        v-else
+        v-model.trim="todo.title"
+        @keydown.enter="toggleEditing(todo.id)"
+        class="edit-todo-input"
+      />
       <button @click="toggleEditing(todo.id)">
         {{ todo.editing ? "Save" : "Edit" }}
       </button>
@@ -109,6 +114,9 @@ export default defineComponent({
       }
       .title {
         margin-right: 10px;
+      }
+      .edit-todo-input {
+        padding: 0 10px;
       }
     }
   }
