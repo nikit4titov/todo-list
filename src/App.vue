@@ -32,32 +32,19 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-
-interface Todo {
-  id: number;
-  title: string;
-  completed: boolean;
-  editing: boolean;
-}
-
-const TODOS_STORAGE_KEY = "todos";
+import todosStorage from "./todos-storage";
 
 export default defineComponent({
   name: "App",
   data() {
     return {
       newTodoTitle: "",
-      todos: [] as Todo[],
+      todos: todosStorage.fetch(),
     };
-  },
-  beforeMount(): void {
-    this.loadTodos();
   },
   watch: {
     todos: {
-      handler(todos: Todo[]): void {
-        this.saveTodos(todos);
-      },
+      handler: todosStorage.save,
       deep: true,
     },
   },
@@ -90,17 +77,6 @@ export default defineComponent({
       const todo = this.todos.find((t) => t.id === id);
       if (todo) {
         todo.completed = !todo.completed;
-      }
-    },
-    saveTodos(todos: Todo[]): void {
-      localStorage.setItem(TODOS_STORAGE_KEY, JSON.stringify(todos));
-    },
-    loadTodos(): void {
-      const todos = localStorage.getItem(TODOS_STORAGE_KEY);
-      if (todos === null) {
-        this.todos = [];
-      } else {
-        this.todos = JSON.parse(todos);
       }
     },
   },
